@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Popular Movies</string>
+
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="movie_image">Movie Image</string>
+    <string name="unnamed_movie">unnamed movie</string>
+</resources>
