@@ -9,17 +9,26 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.apkfuns.logutils.LogUtils;
+
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Response;
 import roman.com.popularmovies.R;
 import roman.com.popularmovies.adapters.RecyclerViewAdapter;
 import roman.com.popularmovies.dataobjects.Movie;
+import roman.com.popularmovies.network.ApiCallback;
+import roman.com.popularmovies.network.ApiManager;
+import roman.com.popularmovies.utils.Constants;
 
 
-public class MoviesFragment extends Fragment {
+public class MoviesFragment extends Fragment implements ApiCallback {
     private GridLayoutManager mGridLayoutManager;
+    private ApiManager mApiManager = ApiManager.getInstance();
 
     private OnFragmentInteractionListener mListener;
     private static final int NUM_OF_COLUMNS = 2;
@@ -75,6 +84,22 @@ public class MoviesFragment extends Fragment {
         mListener = null;
     }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        mApiManager.getMovies(new WeakReference<ApiCallback>(this), Constants.KEY_MOST_POPULAR);
+    }
+
+    @Override
+    public void onFailure(Throwable error) {
+        LogUtils.d("Failure");
+    }
+
+    @Override
+    public void onSuccess(Response response) {
+        LogUtils.d("Success");
+    }
+
     /**
      * This interface must be implemented by activities that contain this
      * fragment to allow an interaction in this fragment to be communicated
@@ -92,7 +117,7 @@ public class MoviesFragment extends Fragment {
 
     private List<Movie> getAllItemList(){
 
-        List<Movie> allItems = new ArrayList<Movie>();
+        List<Movie> allItems = new ArrayList<>();
         allItems.add(new Movie("United States", R.mipmap.ic_launcher));
         allItems.add(new Movie("Canada", R.mipmap.ic_launcher));
         allItems.add(new Movie("United Kingdom", R.mipmap.ic_launcher));

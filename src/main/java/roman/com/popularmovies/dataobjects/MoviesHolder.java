@@ -5,7 +5,7 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class MoviesDataObject {
+public class MoviesHolder {
 
     @SerializedName("page")
     @Expose
@@ -24,7 +24,7 @@ public class MoviesDataObject {
      * No args constructor for use in serialization
      * 
      */
-    public MoviesDataObject() {
+    public MoviesHolder() {
     }
 
     /**
@@ -34,7 +34,7 @@ public class MoviesDataObject {
      * @param page
      * @param totalPages
      */
-    public MoviesDataObject(Integer page, List<Result> results, Integer totalResults, Integer totalPages) {
+    public MoviesHolder(Integer page, List<Result> results, Integer totalResults, Integer totalPages) {
         super();
         this.page = page;
         this.results = results;
