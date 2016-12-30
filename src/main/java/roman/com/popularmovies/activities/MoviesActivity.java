@@ -1,17 +1,16 @@
 package roman.com.popularmovies.activities;
 
-import android.net.Uri;
 import android.os.Bundle;
-
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.widget.Toast;
 
-import roman.com.popularmovies.fragments.MoviesFragment;
 import roman.com.popularmovies.R;
+import roman.com.popularmovies.fragments.MoviesFragment;
+import roman.com.popularmovies.network.ApiManager;
 
-public class MoviesActivity extends AppCompatActivity implements MoviesFragment.OnFragmentInteractionListener {
+public class MoviesActivity extends AppCompatActivity {
+
 
     private static final String KEY_MOVIES_FRAGMENT = "MOVIES_FRAGMENT";
     private MoviesFragment mMoviesFragment;
@@ -22,9 +21,8 @@ public class MoviesActivity extends AppCompatActivity implements MoviesFragment.
         setContentView(R.layout.activity_movies);
 
 //        set the toolbar
-        Toolbar toolbar = (Toolbar)findViewById(R.id.toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
 
     }
@@ -32,7 +30,6 @@ public class MoviesActivity extends AppCompatActivity implements MoviesFragment.
     @Override
     protected void onPostCreate(@Nullable Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-
 
 
         // get the fragment if it already exists
@@ -47,11 +44,5 @@ public class MoviesActivity extends AppCompatActivity implements MoviesFragment.
         }
 
 
-
-    }
-
-    @Override
-    public void onFragmentInteraction(Uri uri) {
-        Toast.makeText(this, "Fragment Interaction Registered On Activity", Toast.LENGTH_SHORT).show();
     }
 }

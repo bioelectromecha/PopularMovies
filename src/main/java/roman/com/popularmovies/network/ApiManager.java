@@ -10,6 +10,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import roman.com.popularmovies.dataobjects.MoviesHolder;
+import roman.com.popularmovies.dataobjects.Result;
 import roman.com.popularmovies.utils.Constants;
 
 /**
@@ -19,8 +20,10 @@ public class ApiManager {
 
     // base url for movie queries
     static final String BASE_URL = "http://api.themoviedb.org/3/";
-    // base url for movie image queries (i.e for gridview)
+
+    // base url for grid image queries (i.e for gridview)
     static final String BASE_URL_IMAGE_POSTER = "http://image.tmdb.org/t/p/w185";
+
     // base url for large image queries (i.e for detail view)
     static final String BASE_URL_IMAGE_BACKDROP = "http://image.tmdb.org/t/p/w780";
 
@@ -74,7 +77,17 @@ public class ApiManager {
                 if (request != null) {
                     // response.isSuccessful() is true if the response code is 2xx
                     if (response != null && response.isSuccessful()) {
-                        request.onSuccess(response);
+                        MoviesHolder moviesHolder = response.body();
+                        if (moviesHolder != null && moviesHolder.getResults() != null && moviesHolder.getResults().size() > 0) {
+                            //the poster paths are not absolute - adapt them to absolute paths so we could later query for images
+                            for (Result result : moviesHolder.getResults()) {
+                                result.setPosterPath(BASE_URL_IMAGE_BACKDROP+result.getPosterPath());
+//                                TODO: adapter the backdrop path aswell
+                            }
+                        }else{
+                            LogUtils.d("no results to show");
+                        }
+                        request.onSuccess(moviesHolder);
                     } else {
                         int statusCode = response.code();
                         // handle response errors yourself

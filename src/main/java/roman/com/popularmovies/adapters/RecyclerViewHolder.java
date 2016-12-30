@@ -6,22 +6,33 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import roman.com.popularmovies.OnRecyclerItemClickListener;
 import roman.com.popularmovies.R;
 
 public class RecyclerViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+    private OnRecyclerItemClickListener mRecyclerItemClickListener = null;
     public TextView movieName;
+    public TextView movieRating;
     public ImageView movieImage;
+
 
     public RecyclerViewHolder(View itemView) {
         super(itemView);
         itemView.setOnClickListener(this);
         movieImage = (ImageView) itemView.findViewById(R.id.movie_image);
         movieName = (TextView) itemView.findViewById(R.id.movie_name);
+        movieRating = (TextView) itemView.findViewById(R.id.movie_rating);
+    }
+
+    public void setRecyclerItemClickListener(OnRecyclerItemClickListener clickListener) {
+        mRecyclerItemClickListener = clickListener;
     }
 
     @Override
     public void onClick(View view) {
-        Toast.makeText(view.getContext(), "Clicked Country Position = " + getPosition(), Toast.LENGTH_SHORT).show();
+        if (mRecyclerItemClickListener != null) {
+            mRecyclerItemClickListener.onClickRecyclerItem(view, getAdapterPosition());
+        }
     }
 }

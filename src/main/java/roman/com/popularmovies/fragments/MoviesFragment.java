@@ -1,37 +1,51 @@
 package roman.com.popularmovies.fragments;
 
 import android.content.Context;
-import android.net.Uri;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.apkfuns.logutils.LogUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.List;
 
-import retrofit2.Response;
+import roman.com.popularmovies.OnRecyclerItemClickListener;
 import roman.com.popularmovies.R;
+import roman.com.popularmovies.activities.MovieDetailActivity;
 import roman.com.popularmovies.adapters.RecyclerViewAdapter;
-import roman.com.popularmovies.dataobjects.Movie;
+import roman.com.popularmovies.dataobjects.MoviesHolder;
+import roman.com.popularmovies.dataobjects.Result;
 import roman.com.popularmovies.network.ApiCallback;
 import roman.com.popularmovies.network.ApiManager;
 import roman.com.popularmovies.utils.Constants;
 
+import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
 
-public class MoviesFragment extends Fragment implements ApiCallback {
-    private GridLayoutManager mGridLayoutManager;
+
+public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecyclerItemClickListener{
     private ApiManager mApiManager = ApiManager.getInstance();
-
-    private OnFragmentInteractionListener mListener;
     private static final int NUM_OF_COLUMNS = 2;
+    private GridLayoutManager mGridLayoutManager;
+    private RecyclerViewAdapter mRecyclerViewAdapter;
+    private RecyclerView mRecyclerView;
+    //this progress bar will be displayed while data is loading from the internet
+    private ProgressBar mProgressBar;
+    //this textview will display a message when no internet connection is available
+    private TextView mNoInternetTextView;
+    private String mSortOrder = Constants.KEY_MOST_POPULAR;
 
     public MoviesFragment() {
         // Required empty public constructor
@@ -41,6 +55,7 @@ public class MoviesFragment extends Fragment implements ApiCallback {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mGridLayoutManager = new GridLayoutManager(getContext(), NUM_OF_COLUMNS);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -48,93 +63,121 @@ public class MoviesFragment extends Fragment implements ApiCallback {
                              Bundle savedInstanceState) {
 
 
-        List<Movie> itemList = getAllItemList();
         View view = inflater.inflate(R.layout.fragment_movies, container, false);
-        RecyclerView recyclerView = (RecyclerView)view.findViewById(R.id.recycler_view);
-        recyclerView.setHasFixedSize(true);
-        recyclerView.setLayoutManager(mGridLayoutManager);
+        mProgressBar = (ProgressBar) view.findViewById(R.id.circular_progress_bar);
+        mNoInternetTextView = (TextView) view.findViewById(R.id.no_internet_placeholder);
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setLayoutManager(mGridLayoutManager);
 
-        RecyclerViewAdapter recyclerAdapter = new RecyclerViewAdapter(getContext(), itemList);
-        recyclerView.setAdapter(recyclerAdapter);
+        mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), new ArrayList<Result>(0),this);
+        mRecyclerView.setAdapter(mRecyclerViewAdapter);
         // Inflate the layout for this fragment
         return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onFragmentInteraction(uri);
-        }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.movies_menu, menu);
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId()== R.id.movies_sort_by_most_popular){
+            mSortOrder = Constants.KEY_MOST_POPULAR;
+            loadData();
         }
-    }
+        if(item.getItemId()== R.id.movies_sort_by_highest_rated){
+            mSortOrder = Constants.KEY_HIGHEST_RATED;
+            loadData();
+        }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        mApiManager.getMovies(new WeakReference<ApiCallback>(this), Constants.KEY_MOST_POPULAR);
+        //this also handles some view changes
+        loadData();
+
     }
 
     @Override
     public void onFailure(Throwable error) {
+        showNoConnectionMessage();
         LogUtils.d("Failure");
     }
 
     @Override
-    public void onSuccess(Response response) {
-        LogUtils.d("Success");
+    public void onSuccess(MoviesHolder moviesHolder) {
+        hideLoadingIndicator();
+        checkNotNull(moviesHolder);
+        checkNotNull(moviesHolder.getResults());
+        mRecyclerViewAdapter.replaceData(moviesHolder.getResults());
     }
 
     /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
+     * check if we're connected to the internet
+     * @return
      */
-    public interface OnFragmentInteractionListener {
-        // TODO: Update argument type and name
-        void onFragmentInteraction(Uri uri);
+    private boolean isConnectedToInternet() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+        return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
     }
 
-    private List<Movie> getAllItemList(){
+    /**
+     * hide the recyclerview and spinner and show a 'no internet' message
+     */
+    private void showNoConnectionMessage() {
+        mRecyclerView.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.GONE);
+        mNoInternetTextView.setVisibility(View.VISIBLE);
+    }
 
-        List<Movie> allItems = new ArrayList<>();
-        allItems.add(new Movie("United States", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Canada", R.mipmap.ic_launcher));
-        allItems.add(new Movie("United Kingdom", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Germany", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Sweden", R.mipmap.ic_launcher));
-        allItems.add(new Movie("United Kingdom", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Germany", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Sweden", R.mipmap.ic_launcher));
-        allItems.add(new Movie("United States", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Canada",R.mipmap.ic_launcher));
-        allItems.add(new Movie("United Kingdom", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Germany", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Sweden", R.mipmap.ic_launcher));
-        allItems.add(new Movie("United Kingdom", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Germany", R.mipmap.ic_launcher));
-        allItems.add(new Movie("Sweden", R.mipmap.ic_launcher));
+    /**
+     * show a loader/spinner while data is loading from the internet
+     */
+    private void showLoadingIndicator() {
+        mRecyclerView.setVisibility(View.GONE);
+        mProgressBar.setVisibility(View.VISIBLE);
+        mNoInternetTextView.setVisibility(View.GONE);
+    }
 
-        return allItems;
+    /**
+     * hide the spinner/loader after the data has been loaded
+     */
+    private void hideLoadingIndicator() {
+        mRecyclerView.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.GONE);
+        mNoInternetTextView.setVisibility(View.GONE);
+    }
+
+    /**
+     * load the data and show relevant view changes
+     */
+    private void loadData(){
+        if (!isConnectedToInternet()) {
+            showNoConnectionMessage();
+            return;
+        }
+        showLoadingIndicator();
+
+        getView().findViewById(R.id.circular_progress_bar).setVisibility(View.VISIBLE);
+        mApiManager.getMovies(new WeakReference<ApiCallback>(this), mSortOrder);
+    }
+
+    @Override
+    public void onClickRecyclerItem(View view, int position) {
+        launchDetailsActivity(mRecyclerViewAdapter.getItemByPosition(position));
+    }
+
+    private void launchDetailsActivity(Result movie) {
+        Intent intent = new Intent(getActivity(), MovieDetailActivity.class);
+        intent.putExtra(Constants.KEY_MOVIE_PARCEL, movie);
+        startActivity(intent);
     }
 }

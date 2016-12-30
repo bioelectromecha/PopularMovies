@@ -8,4 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="AppTheme.ActionBarStyle" parent="@style/ThemeOverlay.AppCompat.ActionBar">
+        <!--set the actionbar back arrow color-->
+        <item name="colorControlNormal">@color/colorPrimaryLight</item>
+    </style>
+
 </resources>
