@@ -29,4 +29,9 @@
         </activity>
     </application>
 
+    <provider
+        android:name=".database.DatabaseProvider"
+        android:authorities="roman.com.popularmovies"
+        android:exported="false" />
+
 </manifest>

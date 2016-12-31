@@ -1,5 +1,5 @@
 
-package roman.com.popularmovies.dataobjects;
+package roman.com.popularmovies.dataobjects.movies;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -9,7 +9,7 @@ import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Result implements Parcelable {
+public class Movie implements Parcelable {
 
     @SerializedName("poster_path")
     @Expose
@@ -58,7 +58,7 @@ public class Result implements Parcelable {
      * No args constructor for use in serialization
      * 
      */
-    public Result() {
+    public Movie() {
     }
 
     /**
@@ -78,7 +78,7 @@ public class Result implements Parcelable {
      * @param video
      * @param popularity
      */
-    public Result(String posterPath, Boolean adult, String overview, String releaseDate, List<Integer> genreIds, Integer id, String originalTitle, String originalLanguage, String title, String backdropPath, Float popularity, Integer voteCount, Boolean video, Float voteAverage) {
+    public Movie(String posterPath, Boolean adult, String overview, String releaseDate, List<Integer> genreIds, Integer id, String originalTitle, String originalLanguage, String title, String backdropPath, Float popularity, Integer voteCount, Boolean video, Float voteAverage) {
         super();
         this.posterPath = posterPath;
         this.adult = adult;
@@ -231,7 +231,7 @@ public class Result implements Parcelable {
         dest.writeValue(this.voteAverage);
     }
 
-    protected Result(Parcel in) {
+    protected Movie(Parcel in) {
         this.posterPath = in.readString();
         this.adult = (Boolean) in.readValue(Boolean.class.getClassLoader());
         this.overview = in.readString();
@@ -249,15 +249,15 @@ public class Result implements Parcelable {
         this.voteAverage = (Float) in.readValue(Float.class.getClassLoader());
     }
 
-    public static final Parcelable.Creator<Result> CREATOR = new Parcelable.Creator<Result>() {
+    public static final Parcelable.Creator<Movie> CREATOR = new Parcelable.Creator<Movie>() {
         @Override
-        public Result createFromParcel(Parcel source) {
-            return new Result(source);
+        public Movie createFromParcel(Parcel source) {
+            return new Movie(source);
         }
 
         @Override
-        public Result[] newArray(int size) {
-            return new Result[size];
+        public Movie[] newArray(int size) {
+            return new Movie[size];
         }
     };
 }

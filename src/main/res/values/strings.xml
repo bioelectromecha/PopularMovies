@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Popular Movies</string>
-
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="movie_image">Movie Image</string>
     <string name="unnamed_movie">unnamed movie</string>
@@ -8,4 +7,7 @@
     <string name="sort_by_highest_rated">Sort by highest rated</string>
     <string name="settings">Settings</string>
     <string name="movies_no_internet">No internet connection</string>
+    <string name="show_favorite_movies">Show favorite movies</string>
+    <string name="review_number">Review</string>
+    <string name="reviews">Reviews</string>
 </resources>

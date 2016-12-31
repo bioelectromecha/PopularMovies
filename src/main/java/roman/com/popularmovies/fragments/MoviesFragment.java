@@ -22,12 +22,14 @@ import com.apkfuns.logutils.LogUtils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-import roman.com.popularmovies.OnRecyclerItemClickListener;
+import roman.com.popularmovies.dataobjects.movies.Movie;
+import roman.com.popularmovies.dataobjects.reviews.ReviewsHolder;
+import roman.com.popularmovies.dataobjects.trailers.TrailersHolder;
+import roman.com.popularmovies.listeners.OnRecyclerItemClickListener;
 import roman.com.popularmovies.R;
 import roman.com.popularmovies.activities.MovieDetailActivity;
 import roman.com.popularmovies.adapters.RecyclerViewAdapter;
-import roman.com.popularmovies.dataobjects.MoviesHolder;
-import roman.com.popularmovies.dataobjects.Result;
+import roman.com.popularmovies.dataobjects.movies.MoviesHolder;
 import roman.com.popularmovies.network.ApiCallback;
 import roman.com.popularmovies.network.ApiManager;
 import roman.com.popularmovies.utils.Constants;
@@ -45,7 +47,7 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
     private ProgressBar mProgressBar;
     //this textview will display a message when no internet connection is available
     private TextView mNoInternetTextView;
-    private String mSortOrder = Constants.KEY_MOST_POPULAR;
+    private String mDisplayMode = Constants.KEY_MOST_POPULAR;
 
     public MoviesFragment() {
         // Required empty public constructor
@@ -70,7 +72,7 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(mGridLayoutManager);
 
-        mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), new ArrayList<Result>(0),this);
+        mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), new ArrayList<Movie>(0),this);
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
         // Inflate the layout for this fragment
         return view;
@@ -86,11 +88,15 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()== R.id.movies_sort_by_most_popular){
-            mSortOrder = Constants.KEY_MOST_POPULAR;
+            mDisplayMode = Constants.KEY_MOST_POPULAR;
             loadData();
         }
         if(item.getItemId()== R.id.movies_sort_by_highest_rated){
-            mSortOrder = Constants.KEY_HIGHEST_RATED;
+            mDisplayMode = Constants.KEY_HIGHEST_RATED;
+            loadData();
+        }
+        if(item.getItemId()== R.id.movies_show_favorites){
+            mDisplayMode = Constants.KEY_FAVORITES;
             loadData();
         }
 
@@ -112,11 +118,21 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
     }
 
     @Override
-    public void onSuccess(MoviesHolder moviesHolder) {
+    public void onMoviesFetchSuccess(MoviesHolder moviesHolder) {
         hideLoadingIndicator();
         checkNotNull(moviesHolder);
-        checkNotNull(moviesHolder.getResults());
-        mRecyclerViewAdapter.replaceData(moviesHolder.getResults());
+        checkNotNull(moviesHolder.getMovies());
+        mRecyclerViewAdapter.replaceData(moviesHolder.getMovies());
+    }
+
+    @Override
+    public void onReviewsFetchSuccess(ReviewsHolder reviewsHolder) {
+        // reviews were fetched, do nothing
+    }
+
+    @Override
+    public void onTrailersFetchSuccess(TrailersHolder trailersHolder) {
+        // trailers were fetched, do nothing
     }
 
     /**
@@ -160,14 +176,16 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
      * load the data and show relevant view changes
      */
     private void loadData(){
-        if (!isConnectedToInternet()) {
+
+        //if there's not internet connection - show the no connection message. UNLESS showing favorites, which are loaded from local storage
+        if (!isConnectedToInternet() && !mDisplayMode.equals(Constants.KEY_FAVORITES)) {
             showNoConnectionMessage();
             return;
         }
         showLoadingIndicator();
 
         getView().findViewById(R.id.circular_progress_bar).setVisibility(View.VISIBLE);
-        mApiManager.getMovies(new WeakReference<ApiCallback>(this), mSortOrder);
+        mApiManager.getMovies(new WeakReference<ApiCallback>(this), mDisplayMode);
     }
 
     @Override
@@ -175,7 +193,7 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
         launchDetailsActivity(mRecyclerViewAdapter.getItemByPosition(position));
     }
 
-    private void launchDetailsActivity(Result movie) {
+    private void launchDetailsActivity(Movie movie) {
         Intent intent = new Intent(getActivity(), MovieDetailActivity.class);
         intent.putExtra(Constants.KEY_MOVIE_PARCEL, movie);
         startActivity(intent);

@@ -37,7 +37,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         if (mMovieDetailFragment == null) {
             android.support.v4.app.FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
             MovieDetailFragment detailFragment = new MovieDetailFragment();
-            fragmentTransaction.replace(R.id.detail_fragment_container, detailFragment, KEY_MOVIE_DETAIL_FRAGMENT);
+            fragmentTransaction.replace(R.id.activity_detail_fragment_container, detailFragment, KEY_MOVIE_DETAIL_FRAGMENT);
             fragmentTransaction.commit();
         }
     }

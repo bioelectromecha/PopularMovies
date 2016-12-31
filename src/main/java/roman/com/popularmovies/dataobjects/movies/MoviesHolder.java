@@ -1,5 +1,5 @@
 
-package roman.com.popularmovies.dataobjects;
+package roman.com.popularmovies.dataobjects.movies;
 
 import java.util.List;
 import com.google.gson.annotations.Expose;
@@ -12,7 +12,7 @@ public class MoviesHolder {
     private Integer page;
     @SerializedName("results")
     @Expose
-    private List<Result> results = null;
+    private List<Movie> mMovies = null;
     @SerializedName("total_results")
     @Expose
     private Integer totalResults;
@@ -29,15 +29,15 @@ public class MoviesHolder {
 
     /**
      * 
-     * @param results
+     * @param movies
      * @param totalResults
      * @param page
      * @param totalPages
      */
-    public MoviesHolder(Integer page, List<Result> results, Integer totalResults, Integer totalPages) {
+    public MoviesHolder(Integer page, List<Movie> movies, Integer totalResults, Integer totalPages) {
         super();
         this.page = page;
-        this.results = results;
+        this.mMovies = movies;
         this.totalResults = totalResults;
         this.totalPages = totalPages;
     }
@@ -50,12 +50,12 @@ public class MoviesHolder {
         this.page = page;
     }
 
-    public List<Result> getResults() {
-        return results;
+    public List<Movie> getMovies() {
+        return mMovies;
     }
 
-    public void setResults(List<Result> results) {
-        this.results = results;
+    public void setMovies(List<Movie> movies) {
+        this.mMovies = movies;
     }
 
     public Integer getTotalResults() {

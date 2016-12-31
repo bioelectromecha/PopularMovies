@@ -7,7 +7,6 @@ import android.support.v7.widget.Toolbar;
 
 import roman.com.popularmovies.R;
 import roman.com.popularmovies.fragments.MoviesFragment;
-import roman.com.popularmovies.network.ApiManager;
 
 public class MoviesActivity extends AppCompatActivity {
 
@@ -39,7 +38,7 @@ public class MoviesActivity extends AppCompatActivity {
         if (mMoviesFragment == null) {
             android.support.v4.app.FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
             MoviesFragment moviesFragment = new MoviesFragment();
-            fragmentTransaction.replace(R.id.fragment_container, moviesFragment, KEY_MOVIES_FRAGMENT);
+            fragmentTransaction.replace(R.id.activity_movies_fragment_container, moviesFragment, KEY_MOVIES_FRAGMENT);
             fragmentTransaction.commit();
         }
 

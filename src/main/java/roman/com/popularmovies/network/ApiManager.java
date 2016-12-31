@@ -9,8 +9,10 @@ import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import roman.com.popularmovies.dataobjects.MoviesHolder;
-import roman.com.popularmovies.dataobjects.Result;
+import roman.com.popularmovies.dataobjects.movies.Movie;
+import roman.com.popularmovies.dataobjects.movies.MoviesHolder;
+import roman.com.popularmovies.dataobjects.reviews.ReviewsHolder;
+import roman.com.popularmovies.dataobjects.trailers.TrailersHolder;
 import roman.com.popularmovies.utils.Constants;
 
 /**
@@ -34,18 +36,19 @@ public class ApiManager {
     private ApiInterface mApiService;
 
     /**
-     * get an instanec of the ApiManager singleton object
-     * @return
-     */
-    public static ApiManager getInstance(){
-        return mInstance;
-    }
-
-    /**
-     *     private constructor since this is a singleton
+     * private constructor since this is a singleton
      */
     private ApiManager() {
         init();
+    }
+
+    /**
+     * get an instanec of the ApiManager singleton object
+     *
+     * @return
+     */
+    public static ApiManager getInstance() {
+        return mInstance;
     }
 
     private void init() {
@@ -58,13 +61,104 @@ public class ApiManager {
         }
         return mApiService;
     }
+    public void getTrailers(final WeakReference<ApiCallback> wCallback, int id) {
+        final Callback<TrailersHolder> objectCallback = new Callback<TrailersHolder>() {
+            @Override
+            public void onResponse(Call<TrailersHolder> call, Response<TrailersHolder> response) {
+                ApiCallback request = null;
+                if (wCallback != null) {
+                    request = wCallback.get();
+                }
+
+                if (request != null) {
+                    // response.isSuccessful() is true if the response code is 2xx
+                    if (response != null && response.isSuccessful()) {
+                        TrailersHolder trailersHolder = response.body();
+                        request.onTrailersFetchSuccess(trailersHolder);
+                    } else {
+                        int statusCode = response.code();
+                        // handle response errors yourself
+                        ResponseBody errorBody = response.errorBody();
+                        try {
+                            LogUtils.d("onResponse status code : " + statusCode + " , error message : " + errorBody.string());
+                        } catch (IOException e) {
+                            LogUtils.d("onResponse exception message : " + e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TrailersHolder> call, Throwable t) {
+                // handle execution failures like no internet connectivity
+                // timeout exception here IOException or SocketTOException
+                ApiCallback req = null;
+                if (wCallback != null) {
+                    req = wCallback.get();
+                }
+                if (req != null) {
+                    req.onFailure(t);
+                }
+            }
+        };
+
+        Call<TrailersHolder> call;
+        call = mApiService.getMovieTrailers(id, API_KEY);
+        call.enqueue(objectCallback);
+    }
+
+    public void getReviews(final WeakReference<ApiCallback> wCallback, int id) {
+        final Callback<ReviewsHolder> objectCallback = new Callback<ReviewsHolder>() {
+            @Override
+            public void onResponse(Call<ReviewsHolder> call, Response<ReviewsHolder> response) {
+                ApiCallback request = null;
+                if (wCallback != null) {
+                    request = wCallback.get();
+                }
+
+                if (request != null) {
+                    // response.isSuccessful() is true if the response code is 2xx
+                    if (response != null && response.isSuccessful()) {
+                        ReviewsHolder reviewsHolder = response.body();
+                        request.onReviewsFetchSuccess(reviewsHolder);
+                    } else {
+                        int statusCode = response.code();
+                        // handle response errors yourself
+                        ResponseBody errorBody = response.errorBody();
+                        try {
+                            LogUtils.d("onResponse status code : " + statusCode + " , error message : " + errorBody.string());
+                        } catch (IOException e) {
+                            LogUtils.d("onResponse exception message : " + e.getMessage());
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ReviewsHolder> call, Throwable t) {
+                // handle execution failures like no internet connectivity
+                // timeout exception here IOException or SocketTOException
+                ApiCallback req = null;
+                if (wCallback != null) {
+                    req = wCallback.get();
+                }
+                if (req != null) {
+                    req.onFailure(t);
+                }
+            }
+        };
+
+        Call<ReviewsHolder> call;
+        call = mApiService.getMovieReviews(id, API_KEY);
+        call.enqueue(objectCallback);
+    }
 
     /**
      * Get a list of movies from TMDb
      *
      * @param wCallback
      */
-    public void getMovies(final WeakReference<ApiCallback> wCallback, String movieSortFilter) {
+    public void getMovies(final WeakReference<ApiCallback> wCallback, String movieDisplayMode) {
 
         final Callback<MoviesHolder> objectCallback = new Callback<MoviesHolder>() {
             @Override
@@ -78,16 +172,16 @@ public class ApiManager {
                     // response.isSuccessful() is true if the response code is 2xx
                     if (response != null && response.isSuccessful()) {
                         MoviesHolder moviesHolder = response.body();
-                        if (moviesHolder != null && moviesHolder.getResults() != null && moviesHolder.getResults().size() > 0) {
+                        if (moviesHolder != null && moviesHolder.getMovies() != null && moviesHolder.getMovies().size() > 0) {
                             //the poster paths are not absolute - adapt them to absolute paths so we could later query for images
-                            for (Result result : moviesHolder.getResults()) {
-                                result.setPosterPath(BASE_URL_IMAGE_BACKDROP+result.getPosterPath());
-//                                TODO: adapter the backdrop path aswell
+                            for (Movie result : moviesHolder.getMovies()) {
+                                result.setPosterPath(BASE_URL_IMAGE_POSTER + result.getPosterPath());
+                                result.setBackdropPath(BASE_URL_IMAGE_BACKDROP + result.getBackdropPath());
                             }
-                        }else{
+                        } else {
                             LogUtils.d("no results to show");
                         }
-                        request.onSuccess(moviesHolder);
+                        request.onMoviesFetchSuccess(moviesHolder);
                     } else {
                         int statusCode = response.code();
                         // handle response errors yourself
@@ -117,13 +211,15 @@ public class ApiManager {
 
         Call<MoviesHolder> call;
 
-        if (movieSortFilter.equals(Constants.KEY_HIGHEST_RATED)) {
+        if (movieDisplayMode.equals(Constants.KEY_HIGHEST_RATED)) {
             call = mApiService.getTopRatedMovies(API_KEY);
             call.enqueue(objectCallback);
-        } else if (movieSortFilter.equals(Constants.KEY_MOST_POPULAR)) {
+        } else if (movieDisplayMode.equals(Constants.KEY_MOST_POPULAR)) {
             call = mApiService.getPopularMovies(API_KEY);
             call.enqueue(objectCallback);
-        }else{
+        } else if (movieDisplayMode.equals(Constants.KEY_FAVORITES)) {
+            //todo load movies from the local database
+        } else {
             throw new IllegalArgumentException("bad movieSortFilter");
         }
     }

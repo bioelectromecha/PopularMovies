@@ -12,19 +12,19 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-import roman.com.popularmovies.OnRecyclerItemClickListener;
 import roman.com.popularmovies.R;
-import roman.com.popularmovies.dataobjects.Result;
+import roman.com.popularmovies.dataobjects.movies.Movie;
+import roman.com.popularmovies.listeners.OnRecyclerItemClickListener;
 
 import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder>{
 
-    private List<Result> mMovieList;
+    private List<Movie> mMovieList;
     private Context mContext;
     private OnRecyclerItemClickListener mRecyclerItemClickListener;
 
-    public RecyclerViewAdapter(Context context, List<Result> movieList, OnRecyclerItemClickListener clickListener) {
+    public RecyclerViewAdapter(Context context, List<Movie> movieList, OnRecyclerItemClickListener clickListener) {
         mMovieList = movieList;
         mContext = context;
         mRecyclerItemClickListener = clickListener;
@@ -59,12 +59,12 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
      * replace the list in the adapter and call notifydatasetchanged
      * @param notesList
      */
-    public void replaceData(@NonNull List<Result> notesList) {
+    public void replaceData(@NonNull List<Movie> notesList) {
         mMovieList = checkNotNull(notesList);
         notifyDataSetChanged();
     }
 
-    public Result getItemByPosition(int position) {
+    public Movie getItemByPosition(int position) {
         return mMovieList.get(position);
     }
 }

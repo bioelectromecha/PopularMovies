@@ -28,10 +28,9 @@
         </android.support.design.widget.AppBarLayout>
 
         <FrameLayout
-            android:id="@+id/detail_fragment_container"
+            android:id="@+id/activity_detail_fragment_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-
     </LinearLayout>
 
 </android.support.design.widget.CoordinatorLayout>
