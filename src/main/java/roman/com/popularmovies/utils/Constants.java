@@ -5,7 +5,6 @@ package roman.com.popularmovies.utils;
  * general app keys and constants
  */
 public class Constants {
-
     //key to retrieve and store the parcel in the intent
     public static final String KEY_MOVIE_PARCEL = "MOVIE_PARCEL";
     public static final String KEY_SHARED_PREFERENCES = "SHARED_PREFERENCES";

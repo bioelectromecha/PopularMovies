@@ -10,4 +10,6 @@
     <string name="show_favorite_movies">Show favorite movies</string>
     <string name="review_number">Review</string>
     <string name="reviews">Reviews</string>
+    <string name="trailer_number">Trailer</string>
+    <string name="trailers">Trailers</string>
 </resources>

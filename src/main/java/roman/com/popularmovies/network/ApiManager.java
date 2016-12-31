@@ -61,6 +61,13 @@ public class ApiManager {
         }
         return mApiService;
     }
+
+
+    /**
+     * get all the trailer for a specific movie (by id) from the network api
+     * @param wCallback
+     * @param id
+     */
     public void getTrailers(final WeakReference<ApiCallback> wCallback, int id) {
         final Callback<TrailersHolder> objectCallback = new Callback<TrailersHolder>() {
             @Override
@@ -107,6 +114,11 @@ public class ApiManager {
         call.enqueue(objectCallback);
     }
 
+    /**
+     * get all the reviews for a specific movie (by id) from the network api
+     * @param wCallback
+     * @param id
+     */
     public void getReviews(final WeakReference<ApiCallback> wCallback, int id) {
         final Callback<ReviewsHolder> objectCallback = new Callback<ReviewsHolder>() {
             @Override
