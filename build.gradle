@@ -46,6 +46,9 @@ dependencies {
     // Gson json parser for retrofit
     compile 'com.squareup.retrofit2:converter-gson:2.0.2'
 
+    // ORM library for saving stuff to local db
+    compile 'com.github.satyan:sugar:1.4'
+
 //     ButterKnife - maybe next time, honestly doesn't bother me too much
 //     compile 'com.jakewharton:butterknife:8.4.0'
 //     annotationProcessor 'com.jakewharton:butterknife-compiler:8.4.0'

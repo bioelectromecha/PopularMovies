@@ -7,9 +7,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -34,6 +36,7 @@ import roman.com.popularmovies.utils.Constants;
 public class MovieDetailFragment extends Fragment implements ApiCallback, View.OnClickListener {
     private static final String BASE_YOUTUBE_URL = "http://www.youtube.com/watch?v=";
     private ApiManager mApiManager = ApiManager.getInstance();
+    private boolean mIsFavorite = false;
     private List<Trailer> mTrailerList = null;
 
     public MovieDetailFragment() {
@@ -43,6 +46,7 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -92,7 +96,6 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
 
         mApiManager.getReviews(new WeakReference<ApiCallback>(this), movie.getId());
         mApiManager.getTrailers(new WeakReference<ApiCallback>(this), movie.getId());
-
     }
 
     @Override
@@ -117,6 +120,7 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
 
     /**
      * this is called after the trailers list have been loaded, to add the trailers to the view
+     *
      * @param trailers
      */
     private void onTrailersLoaded(List<Trailer> trailers) {
@@ -159,14 +163,16 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
 
     }
 
+
     /**
      * the trailer onclick listener
+     *
      * @param view
      */
     @Override
     public void onClick(View view) {
         ViewGroup trailersContainer = (ViewGroup) getView().findViewById(R.id.fragment_detail_trailers_container);
-        int position = trailersContainer.indexOfChild(view)-1;
+        int position = trailersContainer.indexOfChild(view) - 1;
 
         // http://www.youtube.com/watch?v=cxLG2wtE7TM
         String youtubeVideoUrl = BASE_YOUTUBE_URL + mTrailerList.get(position).getKey();
@@ -176,6 +182,7 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
 
     /**
      * this is called after the reviews list has been loaded. used to add the reviews to the view
+     *
      * @param reviews
      */
     private void onReviewsLoaded(List<Review> reviews) {
@@ -218,5 +225,39 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
         }
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.detail_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.detail_favorite_icon) {
+            if (!mIsFavorite) {
+                item.setIcon(getResources().getDrawable(R.drawable.ic_favorite_full, getActivity().getTheme()));
+                mIsFavorite = true;
+                makeMovieFavorite();
+            } else {
+                item.setIcon(getResources().getDrawable(R.drawable.ic_favorite_empty, getActivity().getTheme()));
+                mIsFavorite = false;
+                unmakeMovieFavorite();
+            }
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void unmakeMovieFavorite() {
+
+    }
+
+    private void makeMovieFavorite() {
+        ImageView coverImageView = (ImageView) getView().findViewById(R.id.fragment_detail_cover_image);
+
+    }
 
 }
+
+
