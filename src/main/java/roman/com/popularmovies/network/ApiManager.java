@@ -15,6 +15,8 @@ import roman.com.popularmovies.dataobjects.reviews.ReviewsHolder;
 import roman.com.popularmovies.dataobjects.trailers.TrailersHolder;
 import roman.com.popularmovies.utils.Constants;
 
+import static roman.com.popularmovies.utils.Constants.API_KEY;
+
 /**
  * this class is a singleton through which all TMDb api calls are managed
  */
@@ -29,8 +31,6 @@ public class ApiManager {
     // base url for large image queries (i.e for detail view)
     static final String BASE_URL_IMAGE_BACKDROP = "http://image.tmdb.org/t/p/w780";
 
-    // TMDb api key - left empty because of license restrictions
-    private static final String API_KEY = "";
 
     private static ApiManager mInstance = new ApiManager();
     private ApiInterface mApiService;
