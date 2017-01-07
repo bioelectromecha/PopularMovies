@@ -18,4 +18,24 @@ public class Constants {
     public static final String KEY_MOST_POPULAR = "MOST_POPULAR";
     public static final String KEY_FAVORITES = "FAVORITES";
 
+    //base youtube url for youtube app intents
+    public static final String BASE_YOUTUBE_URL = "http://www.youtube.com/watch?v=";
+
+    //wasp database stuff
+    public static final String DATABASE_NAME = "myDb";
+    public static final String DATABASE_PASSWORD = "passw0rd";
+    public static final String KEY_MOVIES_HASH = "movies";
+    public static final String KEY_TRAILERS_HASH = "trailers";
+    public static final String KEY_REVIEWS_HASH = "reviews";
+
+    //file path for images
+    public static final String IMAGE_DIRECTORY_NAME = "images_dir";
+
+    //image types
+    public static final String COVER_IMAGE_TYPE = "COVER";
+    public static final String POSTER_IMAGE_TYPE = "POSTER";
+
+
+
+
 }

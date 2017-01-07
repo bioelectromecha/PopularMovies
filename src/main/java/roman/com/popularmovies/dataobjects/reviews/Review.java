@@ -9,6 +9,10 @@ public class Review {
     @SerializedName("id")
     @Expose
     private String id;
+
+    public Review() {
+    }
+
     @SerializedName("author")
     @Expose
     private String author;

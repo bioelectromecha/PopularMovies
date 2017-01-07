@@ -14,8 +14,12 @@ public class TrailersHolder {
     @Expose
     private List<Trailer> mTrailers = null;
 
+    public TrailersHolder() {
+    }
+
     public Integer getId() {
         return id;
+
     }
 
     public void setId(Integer id) {

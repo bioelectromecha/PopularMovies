@@ -21,15 +21,18 @@ import com.apkfuns.logutils.LogUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
-import roman.com.popularmovies.dataobjects.movies.Movie;
-import roman.com.popularmovies.dataobjects.reviews.ReviewsHolder;
-import roman.com.popularmovies.dataobjects.trailers.TrailersHolder;
-import roman.com.popularmovies.listeners.OnRecyclerItemClickListener;
+import roman.com.popularmovies.MyApplication;
 import roman.com.popularmovies.R;
 import roman.com.popularmovies.activities.MovieDetailActivity;
 import roman.com.popularmovies.adapters.RecyclerViewAdapter;
+import roman.com.popularmovies.dataobjects.movies.Movie;
 import roman.com.popularmovies.dataobjects.movies.MoviesHolder;
+import roman.com.popularmovies.dataobjects.reviews.ReviewsHolder;
+import roman.com.popularmovies.dataobjects.trailers.TrailersHolder;
+import roman.com.popularmovies.listeners.OnRecyclerItemClickListener;
 import roman.com.popularmovies.network.ApiCallback;
 import roman.com.popularmovies.network.ApiManager;
 import roman.com.popularmovies.utils.Constants;
@@ -37,9 +40,9 @@ import roman.com.popularmovies.utils.Constants;
 import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
 
 
-public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecyclerItemClickListener{
-    private ApiManager mApiManager = ApiManager.getInstance();
+public class MoviesFragment extends Fragment implements ApiCallback, OnRecyclerItemClickListener {
     private static final int NUM_OF_COLUMNS = 2;
+    private ApiManager mApiManager = ApiManager.getInstance();
     private GridLayoutManager mGridLayoutManager;
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private RecyclerView mRecyclerView;
@@ -72,7 +75,7 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setLayoutManager(mGridLayoutManager);
 
-        mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), new ArrayList<Movie>(0),this);
+        mRecyclerViewAdapter = new RecyclerViewAdapter(getContext(), new ArrayList<Movie>(0), this);
         mRecyclerView.setAdapter(mRecyclerViewAdapter);
         // Inflate the layout for this fragment
         return view;
@@ -87,15 +90,15 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if(item.getItemId()== R.id.movies_sort_by_most_popular){
+        if (item.getItemId() == R.id.movies_sort_by_most_popular) {
             mDisplayMode = Constants.KEY_MOST_POPULAR;
             loadData();
         }
-        if(item.getItemId()== R.id.movies_sort_by_highest_rated){
+        if (item.getItemId() == R.id.movies_sort_by_highest_rated) {
             mDisplayMode = Constants.KEY_HIGHEST_RATED;
             loadData();
         }
-        if(item.getItemId()== R.id.movies_show_favorites){
+        if (item.getItemId() == R.id.movies_show_favorites) {
             mDisplayMode = Constants.KEY_FAVORITES;
             loadData();
         }
@@ -119,10 +122,14 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
 
     @Override
     public void onMoviesFetchSuccess(MoviesHolder moviesHolder) {
-        hideLoadingIndicator();
         checkNotNull(moviesHolder);
-        checkNotNull(moviesHolder.getMovies());
-        mRecyclerViewAdapter.replaceData(moviesHolder.getMovies());
+        onMoviesLoaded(moviesHolder.getMovies());
+    }
+
+    private void onMoviesLoaded(List<Movie> movies) {
+        checkNotNull(movies);
+        hideLoadingIndicator();
+        mRecyclerViewAdapter.replaceData(movies);
     }
 
     @Override
@@ -137,6 +144,7 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
 
     /**
      * check if we're connected to the internet
+     *
      * @return
      */
     private boolean isConnectedToInternet() {
@@ -175,7 +183,7 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
     /**
      * load the data and show relevant view changes
      */
-    private void loadData(){
+    private void loadData() {
 
         //if there's not internet connection - show the no connection message. UNLESS showing favorites, which are loaded from local storage
         if (!isConnectedToInternet() && !mDisplayMode.equals(Constants.KEY_FAVORITES)) {
@@ -183,9 +191,16 @@ public class MoviesFragment extends Fragment  implements  ApiCallback, OnRecycle
             return;
         }
         showLoadingIndicator();
-
-        getView().findViewById(R.id.circular_progress_bar).setVisibility(View.VISIBLE);
-        mApiManager.getMovies(new WeakReference<ApiCallback>(this), mDisplayMode);
+        //load from local storage if displaying favorites, otherwise load from network
+        if (mDisplayMode.equals(Constants.KEY_FAVORITES)) {
+            List<Movie> movies = MyApplication.getMoviesDbStore().getAllValues();
+            mRecyclerViewAdapter.setLoadFromLocalStorage(true);
+            onMoviesLoaded(movies);
+        } else {
+            mRecyclerViewAdapter.setLoadFromLocalStorage(false);
+            //load from network if it's not the favorites view
+            mApiManager.getMovies(new WeakReference<ApiCallback>(this), mDisplayMode);
+        }
     }
 
     @Override

@@ -23,8 +23,12 @@ public class ReviewsHolder {
     @Expose
     private Integer totalResults;
 
+    public ReviewsHolder() {
+    }
+
     public Integer getId() {
         return id;
+
     }
 
     public void setId(Integer id) {

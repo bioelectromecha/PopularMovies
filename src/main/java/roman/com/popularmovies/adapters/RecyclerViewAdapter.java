@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
 import java.util.List;
 
 import roman.com.popularmovies.R;
@@ -18,8 +19,9 @@ import roman.com.popularmovies.listeners.OnRecyclerItemClickListener;
 
 import static com.google.gson.internal.$Gson$Preconditions.checkNotNull;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder>{
+public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder> {
 
+    private boolean mLoadFromLocalStorage = false;
     private List<Movie> mMovieList;
     private Context mContext;
     private OnRecyclerItemClickListener mRecyclerItemClickListener;
@@ -43,11 +45,23 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
     public void onBindViewHolder(RecyclerViewHolder holder, int position) {
         holder.movieName.setText(mMovieList.get(position).getTitle());
         holder.movieRating.setText(mMovieList.get(position).getVoteAverage().toString());
-        Picasso.with(mContext)
-                .load(mMovieList.get(position).getPosterPath())
-                .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
-                .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
-                .into(holder.movieImage);
+
+        //should load from local storage if set to do so
+        if (mLoadFromLocalStorage) {
+            File imageFile = new File(mMovieList.get(position).getPosterPath());
+            Picasso.with(mContext)
+                    .load(imageFile)
+                    .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
+                    .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
+                    .into(holder.movieImage);
+        } else {
+            //load from network
+            Picasso.with(mContext)
+                    .load(mMovieList.get(position).getPosterPath())
+                    .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
+                    .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
+                    .into(holder.movieImage);
+        }
     }
 
     @Override
@@ -57,6 +71,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
 
     /**
      * replace the list in the adapter and call notifydatasetchanged
+     *
      * @param notesList
      */
     public void replaceData(@NonNull List<Movie> notesList) {
@@ -66,5 +81,9 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewHolder
 
     public Movie getItemByPosition(int position) {
         return mMovieList.get(position);
+    }
+
+    public void setLoadFromLocalStorage(boolean loadFromLocal) {
+        mLoadFromLocalStorage = loadFromLocal;
     }
 }

@@ -1,6 +1,8 @@
 package roman.com.popularmovies.fragments;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,13 +16,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.apkfuns.logutils.LogUtils;
 import com.squareup.picasso.Picasso;
 
+import net.rehacktive.waspdb.WaspHash;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
+import roman.com.popularmovies.MyApplication;
 import roman.com.popularmovies.R;
 import roman.com.popularmovies.dataobjects.movies.Movie;
 import roman.com.popularmovies.dataobjects.movies.MoviesHolder;
@@ -32,9 +41,14 @@ import roman.com.popularmovies.network.ApiCallback;
 import roman.com.popularmovies.network.ApiManager;
 import roman.com.popularmovies.utils.Constants;
 
+import static roman.com.popularmovies.utils.Constants.BASE_YOUTUBE_URL;
+
 
 public class MovieDetailFragment extends Fragment implements ApiCallback, View.OnClickListener {
-    private static final String BASE_YOUTUBE_URL = "http://www.youtube.com/watch?v=";
+    private Movie mMovie = null;
+    private TrailersHolder mTrailersHolder = null;
+    private ReviewsHolder mReviewsHolder = null;
+
     private ApiManager mApiManager = ApiManager.getInstance();
     private boolean mIsFavorite = false;
     private List<Trailer> mTrailerList = null;
@@ -47,6 +61,15 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        mMovie = getActivity().getIntent().getExtras().getParcelable(Constants.KEY_MOVIE_PARCEL);
+
+        //check if the movie is in favorites
+        WaspHash moviesDbStore = MyApplication.getMoviesDbStore();
+        if (moviesDbStore.get(mMovie.getId()) != null) {
+            mIsFavorite = true;
+            // this is so images will be loaded from local storage and not from the network
+            mMovie = moviesDbStore.get(mMovie.getId());
+        }
     }
 
     @Override
@@ -61,41 +84,90 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        Movie movie = getActivity().getIntent().getExtras().getParcelable(Constants.KEY_MOVIE_PARCEL);
+        if (mMovie == null) {
+            LogUtils.d("ERROR! NULL MOVIE REFERENCE!");
+            throw new IllegalArgumentException("shouldn't be able to even reach movieDetailFragment without a valid movie");
+        }
 
-        //load the cover image
+
+        /***********************
+         * Load the cover image
+         ***********************/
         ImageView coverImageView = (ImageView) view.findViewById(R.id.fragment_detail_cover_image);
-        Picasso.with(getContext())
-                .load(movie.getBackdropPath())
-                .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
-                .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
-                .into(coverImageView);
 
-        //load the poster image
+        if (mIsFavorite) {
+            File localCoverImage = new File(mMovie.getBackdropPath());
+            Picasso.with(getContext())
+                    .load(localCoverImage)
+                    .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
+                    .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
+                    .into(coverImageView);
+        } else {
+            Picasso.with(getContext())
+                    .load(mMovie.getBackdropPath())
+                    .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
+                    .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
+                    .into(coverImageView);
+        }
+        /***********************
+         * load the poster image
+         ***********************/
         ImageView posterImageView = (ImageView) view.findViewById(R.id.fragment_detail_poster_image);
-        Picasso.with(getContext())
-                .load(movie.getPosterPath())
-                .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
-                .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
-                .into(posterImageView);
+
+        //if the movie exists locally, load it from the file system
+        if (mIsFavorite) {
+            File localPosterImage = new File(mMovie.getPosterPath());
+            Picasso.with(getContext())
+                    .load(localPosterImage)
+                    .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
+                    .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
+                    .into(posterImageView);
+        } else {
+            //load the image from network
+            Picasso.with(getContext())
+                    .load(mMovie.getPosterPath())
+                    .placeholder(R.drawable.ic_placeholder) // show this image if not loaded yet
+                    .error(R.drawable.ic_image_not_found)      // show this if error or image not exist
+                    .into(posterImageView);
+        }
+
 
         TextView textview = (TextView) view.findViewById(R.id.movie_title);
-        textview.setText(movie.getTitle());
+        textview.setText(mMovie.getTitle());
 
         textview = (TextView) view.findViewById(R.id.movie_date);
-        textview.setText(movie.getReleaseDate());
+        textview.setText(mMovie.getReleaseDate());
 
         textview = (TextView) view.findViewById(R.id.movie_rating);
-        textview.setText(String.valueOf(movie.getVoteAverage()));
+        textview.setText(String.valueOf(mMovie.getVoteAverage()));
 
         textview = (TextView) view.findViewById(R.id.movie_description);
-        textview.setText(movie.getOverview());
+        textview.setText(mMovie.getOverview());
 
         //TODO remove this, it's really not needed
-        getActivity().setTitle(movie.getTitle());
+        getActivity().setTitle(mMovie.getTitle());
 
-        mApiManager.getReviews(new WeakReference<ApiCallback>(this), movie.getId());
-        mApiManager.getTrailers(new WeakReference<ApiCallback>(this), movie.getId());
+        /**********************
+         * load the reviews and trailers
+         ********************/
+
+        //load from db if the movie is a favorite
+        if (mIsFavorite) {
+            loadTrailersFromDb();
+            loadReviewsFromDb();
+            //load from the network
+        } else {
+            mApiManager.getTrailers(new WeakReference<ApiCallback>(this), mMovie.getId());
+            mApiManager.getReviews(new WeakReference<ApiCallback>(this), mMovie.getId());
+        }
+    }
+
+    private void loadReviewsFromDb() {
+        onReviewsFetchSuccess((ReviewsHolder) MyApplication.getReviewsDbStore().get(mMovie.getId()));
+    }
+
+    private void loadTrailersFromDb() {
+        onTrailersFetchSuccess((TrailersHolder) MyApplication.getTrailersDbStore().get(mMovie.getId()));
     }
 
     @Override
@@ -111,11 +183,13 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
     @Override
     public void onReviewsFetchSuccess(ReviewsHolder reviewsHolder) {
         onReviewsLoaded(reviewsHolder.getReviews());
+        mReviewsHolder = reviewsHolder;
     }
 
     @Override
     public void onTrailersFetchSuccess(TrailersHolder trailersHolder) {
         onTrailersLoaded(trailersHolder.getTrailers());
+        mTrailersHolder = trailersHolder;
     }
 
     /**
@@ -160,7 +234,6 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
                 trailersView.setOnClickListener(this);
             }
         }
-
     }
 
 
@@ -223,6 +296,8 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
                 reviewsContainer.addView(reviewView);
             }
         }
+
+
     }
 
     @Override
@@ -230,6 +305,14 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
         super.onCreateOptionsMenu(menu, inflater);
         // Inflate the menu; this adds items to the action bar if it is present.
         inflater.inflate(R.menu.detail_menu, menu);
+
+        //check if the movie is in favorites
+        if (mIsFavorite) {
+            Toast.makeText(getActivity(), "THE MOVIE IS A FAVORITE!", Toast.LENGTH_SHORT).show();
+            //menu.size()-1 is the last item in the menu
+            menu.getItem(menu.size() - 1).setIcon(getResources().getDrawable(R.drawable.ic_favorite_full, getActivity().getTheme()));
+        }
+
     }
 
     @Override
@@ -238,26 +321,102 @@ public class MovieDetailFragment extends Fragment implements ApiCallback, View.O
             if (!mIsFavorite) {
                 item.setIcon(getResources().getDrawable(R.drawable.ic_favorite_full, getActivity().getTheme()));
                 mIsFavorite = true;
-                makeMovieFavorite();
+                addMovieToFavorites();
             } else {
                 item.setIcon(getResources().getDrawable(R.drawable.ic_favorite_empty, getActivity().getTheme()));
                 mIsFavorite = false;
-                unmakeMovieFavorite();
+                removeMovieFromFavorites();
             }
 
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void unmakeMovieFavorite() {
+    private void removeMovieFromFavorites() {
+        deleteFromInternalStorage(mMovie.getPosterPath());
+        deleteFromInternalStorage(mMovie.getBackdropPath());
 
+        MyApplication.getMoviesDbStore().remove(mMovie.getId());
+        if (mReviewsHolder != null) {
+            MyApplication.getReviewsDbStore().remove(mReviewsHolder.getId());
+        }
+        if (mTrailersHolder != null) {
+            MyApplication.getTrailersDbStore().remove(mTrailersHolder.getId());
+        }
     }
 
-    private void makeMovieFavorite() {
+    private void addMovieToFavorites() {
+
+        //save the poster image to local storage
+        ImageView posterImageView = (ImageView) getView().findViewById(R.id.fragment_detail_poster_image);
+        Bitmap posterImageBitmap = ((BitmapDrawable) posterImageView.getDrawable()).getBitmap();
+        String pathToPosterImage = saveToInternalStorage(posterImageBitmap, String.valueOf(mMovie.getId()) + Constants.POSTER_IMAGE_TYPE);
+
+        //save the cover image to local storage
         ImageView coverImageView = (ImageView) getView().findViewById(R.id.fragment_detail_cover_image);
+        Bitmap coverImageBitmap = ((BitmapDrawable) coverImageView.getDrawable()).getBitmap();
+        String pathToCoverImage = saveToInternalStorage(coverImageBitmap, String.valueOf(mMovie.getId()) + Constants.COVER_IMAGE_TYPE);
 
+        //update images paths before saving to db
+        mMovie.setPosterPath(pathToPosterImage);
+        mMovie.setBackdropPath(pathToCoverImage);
+
+        LogUtils.d(mMovie.getPosterPath());
+        LogUtils.d(mMovie.getBackdropPath());
+
+        //store the image data to db
+        MyApplication.getMoviesDbStore().put(mMovie.getId(), mMovie);
+        //store the review data to db
+        if (mReviewsHolder != null) {
+            MyApplication.getReviewsDbStore().put(mReviewsHolder.getId(), mReviewsHolder);
+        }
+        //store the trailers data to db
+        if (mTrailersHolder != null) {
+            MyApplication.getTrailersDbStore().put(mTrailersHolder.getId(), mTrailersHolder);
+        }
     }
 
+    /**
+     * save an image to the images directory with the given name, and return the absolute path to the newly created image
+     *
+     * @param bitmapImage
+     * @param imageName
+     * @return
+     */
+    private String saveToInternalStorage(Bitmap bitmapImage, String imageName) {
+        File directory = MyApplication.getImageDir();
+        // Create imageDir
+        File myPath = new File(directory, imageName);
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(myPath);
+            // Use the compress method on the BitMap object to write image to the OutputStream
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return myPath.getAbsolutePath();
+    }
+
+    /**
+     * delete an image from internal storage at the given path, do nothing if it doesn't exist
+     *
+     * @param pathToFile
+     * @return
+     */
+    private void deleteFromInternalStorage(String pathToFile) {
+        File fileAtPath = new File(pathToFile);
+        if (fileAtPath.exists()) {
+            fileAtPath.delete();
+        }
+
+    }
 }
 
 
