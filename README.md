@@ -1,4 +1,13 @@
 # PopularMovies Android Application
-## Built for the Udacity Android Nano-Degree program
-### Created by Roman Smirnov
-### 24/12/2016
+See up-to-date popular and highest rated movies, add favorites and store for offline review. 
+
+## Screenshots
+
+![alttext](https://raw.githubusercontent.com/bioelectromecha/PopularMovies/master/screenshot/screenshot_movies.png "Main Screen")
+
+![alttext](https://raw.githubusercontent.com/bioelectromecha/PopularMovies/master/screenshot/screenshot_details.png "Detail Screen")
+
+## Version
+Alpha 0.1
+## Created by
+Roman Smirnov
