@@ -3,9 +3,9 @@ See up-to-date popular and highest rated movies, add favorites and store for off
 
 ## Screenshots
 
-![alttext](https://raw.githubusercontent.com/bioelectromecha/PopularMovies/master/screenshot/screenshot_movies.png "Main Screen")
+![alttext](https://raw.githubusercontent.com/bioelectromecha/PopularMovies/master/screenshots/screenshot_movies.png "Main Screen")
 
-![alttext](https://raw.githubusercontent.com/bioelectromecha/PopularMovies/master/screenshot/screenshot_details.png "Detail Screen")
+![alttext](https://raw.githubusercontent.com/bioelectromecha/PopularMovies/master/screenshots/screenshot_details.png "Detail Screen")
 
 ## Version
 Alpha 0.1
