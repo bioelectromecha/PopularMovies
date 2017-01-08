@@ -18,3 +18,5 @@ Roman Smirnov
 3. switch to mvp
 4. save all to db
 5. sync adapter
+6. transparent actionbar on the details screen
+7. play trailer from details screen
